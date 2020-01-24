@@ -62,9 +62,9 @@ def plot_sent(rows: [Row], date_list):
 def plot_distinct_recipients(rows: [Row], date_list):
     for row in rows:
         name = row["top_sender"] + " (" + str(row["total_sent"]) + ")"
-        sent_this_month = row["sent_this_month"]
+        distinct_recipients_this_month = row["distinct_recipients_this_month"]
 
-        sent_dict = {item[0]: item[1] for item in sent_this_month}
+        sent_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
 
         result = []
         for index, item in enumerate(date_list):
@@ -72,9 +72,9 @@ def plot_distinct_recipients(rows: [Row], date_list):
 
         plt.plot(date_list, result, label=name)
 
-    plt.title("Top senders sent mails")
+    plt.title("Top senders distinct inbound contacts")
     plt.xlabel("Date")
-    plt.ylabel("Sent mails")
+    plt.ylabel("Distinct inbound contacts")
     plt.legend()
     plt.xticks(rotation=90)
     plt.grid(True)
