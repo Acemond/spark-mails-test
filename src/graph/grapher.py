@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
-import numpy as np
 
 
 def create_date_list(leaders: DataFrame):
@@ -22,11 +21,7 @@ def create_date_list(leaders: DataFrame):
     for month in range(1, max_month + 1):
         dates += [(month, max_year)]
 
-    return dates
-
-
-def format_date_key(month: int, year: int):
-    return str(month).rjust(2, "0") + "/" + str(year)
+    return [str(date[0]).rjust(2, "0") + "/" + str(date[1]) for date in dates]
 
 
 def plot_top_senders(leaders: DataFrame):
@@ -35,7 +30,7 @@ def plot_top_senders(leaders: DataFrame):
     date_list = create_date_list(leaders)
 
     rows = leaders.join(leaders.groupBy("sender").agg(max("total_sent").alias("score")), "sender") \
-        .groupBy("score", "sender").agg(collect_list(struct(array("month", "year"), "total_sent")).alias("sent_by_date"))\
+        .groupBy("score", "sender").agg(collect_list(struct("month_year", "total_sent")).alias("sent_by_date"))\
         .orderBy(desc("score"), "sender")\
         .collect()
 
@@ -48,21 +43,13 @@ def plot_top_senders(leaders: DataFrame):
         name = row["sender"] + " (" + str(row["score"]) + ")"
         sent_by_date = row["sent_by_date"]
 
-        date_dic = dict()
-        for tuple in sent_by_date:
-            date_dic[format_date_key(tuple[0][0], tuple[0][1])] = int(tuple[1])
+        date_dict = {item[0]: item[1] for item in sent_by_date}
 
-        result = dict([(format_date_key(date[0], date[1]), None) for date in date_list])
-        result.update(date_dic)
+        result = [date_dict.get(date_list[0])]
+        for index, item in enumerate(date_list[1:]):
+            result += [date_dict.get(item) or result[index]]
 
-        x_axis = [format_date_key(date[0], date[1]) for date in date_list]
-        y_axis = list(result.values())
-
-        for index, item in enumerate(y_axis):
-            if index < len(y_axis) - 1 and not y_axis[index + 1]:
-                y_axis[index + 1] = y_axis[index]
-
-        ax.plot(x_axis, y_axis, label=name)
+        ax.plot(date_list, result, label=name)
         ax.legend()
 
     plt.xticks(rotation=90)

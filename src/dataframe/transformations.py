@@ -32,5 +32,5 @@ def top_senders(mails_df: DataFrame, sent_received_df: DataFrame) -> DataFrame:
         .withColumn("year", expr("cast(date_format(date, 'yyyy') as int)"))\
         .withColumn("month_year", expr("date_format(date, 'MM/yyyy')"))\
         .drop("date")\
-        .groupBy("sender", "month", "year", "display_date").agg(max("total_sent").alias("total_sent"))\
+        .groupBy("sender", "month", "year", "month_year").agg(max("total_sent").alias("total_sent"))\
         .withColumnRenamed("max(total_sent)", "total_sent")
