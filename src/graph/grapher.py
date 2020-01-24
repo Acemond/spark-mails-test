@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, collect_list, desc, struct
+from pyspark.sql.functions import col, collect_list, desc, struct, expr, min, max, sum
 
 
 def create_date_list(leaders: DataFrame):
@@ -24,14 +24,14 @@ def create_date_list(leaders: DataFrame):
     return [str(date[0]).rjust(2, "0") + "/" + str(date[1]) for date in dates]
 
 
-def plot_top_senders(leaders: DataFrame):
-    leaders.cache()
+def plot_top_senders(top_senders: DataFrame):
+    top_senders.cache()
 
-    date_list = create_date_list(leaders)
+    date_list = create_date_list(top_senders)
 
-    rows = leaders.join(leaders.groupBy("sender").agg(max("total_sent").alias("score")), "sender") \
-        .groupBy("score", "sender").agg(collect_list(struct("month_year", "total_sent")).alias("sent_by_date"))\
-        .orderBy(desc("score"), "sender")\
+    rows = top_senders.join(top_senders.groupBy("sender").agg(sum("mail_count").alias("total")), "sender") \
+        .groupBy("total", "sender").agg(collect_list(struct("month_year", "mail_count")).alias("sent_this_month"))\
+        .orderBy(desc("total"), "sender")\
         .collect()
 
     fig, ax = plt.subplots()
@@ -40,14 +40,17 @@ def plot_top_senders(leaders: DataFrame):
     ax.set_ylabel("Emails sent")
 
     for row in rows:
-        name = row["sender"] + " (" + str(row["score"]) + ")"
-        sent_by_date = row["sent_by_date"]
+        name = row["sender"] + " (" + str(row["total"]) + ")"
+        sent_this_month = row["sent_this_month"]
 
-        date_dict = {item[0]: item[1] for item in sent_by_date}
+        date_dict = {item[0]: item[1] for item in sent_this_month}
 
         result = [date_dict.get(date_list[0])]
         for index, item in enumerate(date_list[1:]):
-            result += [date_dict.get(item) or result[index]]
+            if date_dict.get(item):
+                result += [date_dict.get(item) + (result[index] or 0)]
+            else:
+                result += [result[index]]
 
         ax.plot(date_list, result, label=name)
         ax.legend()
