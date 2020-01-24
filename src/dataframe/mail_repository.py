@@ -1,4 +1,5 @@
 from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
 
@@ -19,10 +20,17 @@ class MailRepository(object):
             # StructField("called_corrupt_record", StringType()),
         ])
 
-        return self.spark.read\
+        mails_df = self.spark.read\
             .option("escape", "\"")\
             .schema(schema)\
             .csv(input_path)
+
+        return mails_df \
+            .withColumn("recipient_array", expr("split(recipients, '\\\\|')")) \
+            .drop("recipients") \
+            .selectExpr("*", "explode(recipient_array) as recipient") \
+            .drop(col("recipient_array"))\
+            .cache()
 
     def save(self, resulting_df: DataFrame):
         resulting_df.coalesce(1).write\

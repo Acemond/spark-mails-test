@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, collect_list, desc, struct, expr, min, max, sum
+from pyspark.sql.functions import col, collect_list, struct, min, max, sum
 
 
 def create_date_list(leaders: DataFrame):
@@ -29,13 +29,15 @@ def plot_top_senders(top_senders: DataFrame):
 
     date_list = create_date_list(top_senders)
 
-    rows = top_senders.join(top_senders.groupBy("sender").agg(sum("mail_count").alias("total")), "sender") \
-        .groupBy("total", "sender").agg(collect_list(struct("month_year", "mail_count")).alias("sent_this_month"))\
-        .orderBy(desc("total"), "sender")\
+    total_df = top_senders.groupBy("sender").agg(sum("mail_count").alias("total"))
+    rows = top_senders.join(total_df, "sender") \
+        .groupBy("total", "sender")\
+        .agg(collect_list(struct("month_year", "mail_count")).alias("sent_this_month"))\
+        .orderBy("sender")\
         .collect()
 
     fig, ax = plt.subplots()
-    ax.set_title("Email Senders top 10")
+    ax.set_title("Email Senders top")
     ax.set_xlabel("Date")
     ax.set_ylabel("Emails sent")
 
@@ -47,10 +49,7 @@ def plot_top_senders(top_senders: DataFrame):
 
         result = [date_dict.get(date_list[0])]
         for index, item in enumerate(date_list[1:]):
-            if date_dict.get(item):
-                result += [date_dict.get(item) + (result[index] or 0)]
-            else:
-                result += [result[index]]
+            result += [date_dict.get(item) or 0]
 
         ax.plot(date_list, result, label=name)
         ax.legend()
@@ -61,8 +60,37 @@ def plot_top_senders(top_senders: DataFrame):
     plt.savefig("output/plot.png")
 
 
-def plot_correspondants(mails_df: DataFrame, top_senders_df: DataFrame):
-    mails_df.show()
-    top_senders_df.show()
+def plot_recipients(top_senders_recipients: DataFrame):
+    top_senders_recipients.cache()
 
-    return
+    date_list = create_date_list(top_senders_recipients)
+
+    total_df = top_senders_recipients.groupBy("recipient").agg(sum("received").alias("total"))
+    rows = top_senders_recipients.join(total_df, "recipient") \
+        .groupBy("total", "recipient")\
+        .agg(collect_list(struct("month_year", "received")).alias("recipients_this_month"))\
+        .orderBy("recipient")\
+        .collect()
+
+    fig, ax = plt.subplots()
+    ax.set_title("Email Senders top inbound distinct recipient count")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Emails sent")
+
+    for row in rows:
+        name = row["recipient"] + " (" + str(row["total"]) + ")"
+        recipients_this_month = row["recipients_this_month"]
+
+        date_dict = {item[0]: item[1] for item in recipients_this_month}
+
+        result = [date_dict.get(date_list[0])]
+        for index, item in enumerate(date_list[1:]):
+            result += [date_dict.get(item) or 0]
+
+        ax.plot(date_list, result, label=name)
+        ax.legend()
+
+    plt.xticks(rotation=90)
+    plt.grid()
+    plt.tight_layout()
+    plt.savefig("output/plot2.png")
