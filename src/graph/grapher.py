@@ -61,7 +61,7 @@ def plot_sent(rows: [Row], date_list):
 
 def plot_distinct_recipients(rows: [Row], date_list):
     for row in rows:
-        name = row["top_sender"] + " (" + str(row["total_sent"]) + ")"
+        name = row["top_sender"] + " (" + str(row["total_distinct_recipients"]) + ")"
         distinct_recipients_this_month = row["distinct_recipients_this_month"]
 
         sent_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
