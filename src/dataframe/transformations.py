@@ -28,7 +28,8 @@ def top_senders_sent_count(mails_df: DataFrame, top_senders_names: [str]) -> Dat
         .withColumn("month", expr("cast(date_format(date, 'M') as int)"))\
         .withColumn("year", expr("cast(date_format(date, 'yyyy') as int)"))\
         .withColumn("month_year", expr("date_format(date, 'MM/yyyy')"))\
-        .groupBy("sender", "month", "year", "month_year").agg(count("messageIdentifier").alias("mail_count"))
+        .groupBy("sender", "month", "year", "month_year").agg(count("messageIdentifier").alias("sent"))\
+        .withColumnRenamed("sender", "top_sender")
 
 
 def top_senders_distinct_recipients_count(mails_df: DataFrame, top_senders_names: [str]):
@@ -37,4 +38,5 @@ def top_senders_distinct_recipients_count(mails_df: DataFrame, top_senders_names
         .withColumn("month", expr("cast(date_format(date, 'M') as int)")) \
         .withColumn("year", expr("cast(date_format(date, 'yyyy') as int)")) \
         .withColumn("month_year", expr("date_format(date, 'MM/yyyy')")) \
-        .groupBy("recipient", "month", "year", "month_year").agg(countDistinct("sender").alias("received"))
+        .groupBy("recipient", "month", "year", "month_year").agg(countDistinct("sender").alias("distinct_recipients"))\
+        .withColumnRenamed("recipient", "top_sender")

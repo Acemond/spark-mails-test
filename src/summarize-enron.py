@@ -21,7 +21,12 @@ sentReceivedDF = transformations.sent_received(df)
 mailRepo.save(sentReceivedDF)
 
 top_senders_names = transformations.top_senders_list(sentReceivedDF)
-top_senders_sent_df = transformations.top_senders_sent_count(df, top_senders_names)
-grapher.plot_top_senders(top_senders_sent_df)
-top_senders_distinct_recipients_df = transformations.top_senders_distinct_recipients_count(df, top_senders_names)
-grapher.plot_recipients(top_senders_distinct_recipients_df)
+
+sent_df = transformations.top_senders_sent_count(df, top_senders_names)
+distinct_received_df = transformations.top_senders_distinct_recipients_count(df, top_senders_names)
+
+result_df = sent_df.join(distinct_received_df, ["top_sender", "month_year", "month", "year"], "left")\
+    .na.fill(0)
+result_df.show(40, False)
+
+grapher.plot_results(result_df)

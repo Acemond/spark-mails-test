@@ -24,73 +24,61 @@ def create_date_list(leaders: DataFrame):
     return [str(date[0]).rjust(2, "0") + "/" + str(date[1]) for date in dates]
 
 
-def plot_top_senders(top_senders: DataFrame):
-    top_senders.cache()
+def plot_results(result_df):
+    result_df.cache()
 
-    date_list = create_date_list(top_senders)
+    date_list = create_date_list(result_df)
 
-    total_df = top_senders.groupBy("sender").agg(sum("mail_count").alias("total"))
-    rows = top_senders.join(total_df, "sender") \
-        .groupBy("total", "sender")\
-        .agg(collect_list(struct("month_year", "mail_count")).alias("sent_this_month"))\
-        .orderBy("sender")\
+    total_df = result_df.groupBy("top_sender")\
+        .agg(sum("sent").alias("total_sent"), sum("distinct_recipients").alias("total_distinct_recipients"))
+
+    rows = result_df.join(total_df, "top_sender") \
+        .groupBy("total_sent", "total_distinct_recipients", "top_sender")\
+        .agg(collect_list(struct("month_year", "sent")).alias("sent_this_month"),
+             collect_list(struct("month_year", "distinct_recipients")).alias("distinct_recipients_this_month"))\
+        .orderBy("top_sender")\
         .collect()
 
-    fig, ax = plt.subplots()
-    ax.set_title("Email Senders top")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Emails sent")
-
+    plt.figure(figsize=(10, 10))
+    plt.subplot(2, 1, 1)
     for row in rows:
-        name = row["sender"] + " (" + str(row["total"]) + ")"
+        name = row["top_sender"] + " (" + str(row["total_sent"]) + ")"
         sent_this_month = row["sent_this_month"]
 
-        date_dict = {item[0]: item[1] for item in sent_this_month}
+        sent_dict = {item[0]: item[1] for item in sent_this_month}
 
-        result = [date_dict.get(date_list[0])]
-        for index, item in enumerate(date_list[1:]):
-            result += [date_dict.get(item) or 0]
+        result = []
+        for index, item in enumerate(date_list):
+            result += [sent_dict.get(item) or 0]
 
-        ax.plot(date_list, result, label=name)
-        ax.legend()
+        plt.plot(date_list, result, label=name)
 
+    plt.title("Top senders sent mails")
+    plt.xlabel("Date")
+    plt.ylabel("Sent mails")
+    plt.legend()
     plt.xticks(rotation=90)
-    plt.grid()
+    plt.grid(True)
+
+    plt.subplot(2, 1, 2)
+    for row in rows:
+        name = row["top_sender"] + " (" + str(row["total_distinct_recipients"]) + ")"
+        distinct_recipients_this_month = row["distinct_recipients_this_month"]
+
+        recipients_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
+
+        result = []
+        for index, item in enumerate(date_list):
+            result += [recipients_dict.get(item) or 0]
+
+        plt.plot(date_list, result, label=name)
+
+    plt.title("Top Senders distinct recipients")
+    plt.xlabel("Date")
+    plt.ylabel("Distinct recipients")
+    plt.legend()
+    plt.xticks(rotation=90)
+    plt.grid(True)
+
     plt.tight_layout()
     plt.savefig("output/plot.png")
-
-
-def plot_recipients(top_senders_recipients: DataFrame):
-    top_senders_recipients.cache()
-
-    date_list = create_date_list(top_senders_recipients)
-
-    total_df = top_senders_recipients.groupBy("recipient").agg(sum("received").alias("total"))
-    rows = top_senders_recipients.join(total_df, "recipient") \
-        .groupBy("total", "recipient")\
-        .agg(collect_list(struct("month_year", "received")).alias("recipients_this_month"))\
-        .orderBy("recipient")\
-        .collect()
-
-    fig, ax = plt.subplots()
-    ax.set_title("Email Senders top inbound distinct recipient count")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Emails sent")
-
-    for row in rows:
-        name = row["recipient"] + " (" + str(row["total"]) + ")"
-        recipients_this_month = row["recipients_this_month"]
-
-        date_dict = {item[0]: item[1] for item in recipients_this_month}
-
-        result = [date_dict.get(date_list[0])]
-        for index, item in enumerate(date_list[1:]):
-            result += [date_dict.get(item) or 0]
-
-        ax.plot(date_list, result, label=name)
-        ax.legend()
-
-    plt.xticks(rotation=90)
-    plt.grid()
-    plt.tight_layout()
-    plt.savefig("output/plot2.png")
