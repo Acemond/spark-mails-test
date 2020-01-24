@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, Row
 from pyspark.sql.functions import col, collect_list, struct, min, max, sum
 
 
@@ -24,23 +24,21 @@ def create_date_list(leaders: DataFrame):
     return [str(date[0]).rjust(2, "0") + "/" + str(date[1]) for date in dates]
 
 
-def plot_results(result_df):
-    result_df.cache()
+def collect_rows(df: DataFrame):
+    df.cache()
 
-    date_list = create_date_list(result_df)
-
-    total_df = result_df.groupBy("top_sender")\
+    total_df = df.groupBy("top_sender")\
         .agg(sum("sent").alias("total_sent"), sum("distinct_recipients").alias("total_distinct_recipients"))
 
-    rows = result_df.join(total_df, "top_sender") \
+    return df.join(total_df, "top_sender") \
         .groupBy("total_sent", "total_distinct_recipients", "top_sender")\
         .agg(collect_list(struct("month_year", "sent")).alias("sent_this_month"),
              collect_list(struct("month_year", "distinct_recipients")).alias("distinct_recipients_this_month"))\
         .orderBy("top_sender")\
         .collect()
 
-    plt.figure(figsize=(10, 10))
-    plt.subplot(2, 1, 1)
+
+def plot_sent(rows: [Row], date_list):
     for row in rows:
         name = row["top_sender"] + " (" + str(row["total_sent"]) + ")"
         sent_this_month = row["sent_this_month"]
@@ -60,25 +58,38 @@ def plot_results(result_df):
     plt.xticks(rotation=90)
     plt.grid(True)
 
-    plt.subplot(2, 1, 2)
-    for row in rows:
-        name = row["top_sender"] + " (" + str(row["total_distinct_recipients"]) + ")"
-        distinct_recipients_this_month = row["distinct_recipients_this_month"]
 
-        recipients_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
+def plot_distinct_recipients(rows: [Row], date_list):
+    for row in rows:
+        name = row["top_sender"] + " (" + str(row["total_sent"]) + ")"
+        sent_this_month = row["sent_this_month"]
+
+        sent_dict = {item[0]: item[1] for item in sent_this_month}
 
         result = []
         for index, item in enumerate(date_list):
-            result += [recipients_dict.get(item) or 0]
+            result += [sent_dict.get(item) or 0]
 
         plt.plot(date_list, result, label=name)
 
-    plt.title("Top Senders distinct recipients")
+    plt.title("Top senders sent mails")
     plt.xlabel("Date")
-    plt.ylabel("Distinct recipients")
+    plt.ylabel("Sent mails")
     plt.legend()
     plt.xticks(rotation=90)
     plt.grid(True)
+
+
+def plot_results(result_df):
+    rows = collect_rows(result_df)
+    date_list = create_date_list(result_df)
+
+    plt.figure(figsize=(10, 10))
+    plt.subplot(2, 1, 1)
+    plot_sent(rows, date_list)
+
+    plt.subplot(2, 1, 2)
+    plot_distinct_recipients(rows, date_list)
 
     plt.tight_layout()
     plt.savefig("output/plot.png")
