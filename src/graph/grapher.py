@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import *
+from pyspark.sql.functions import col, collect_list, desc, struct
 
 
 def create_date_list(leaders: DataFrame):
@@ -56,3 +56,10 @@ def plot_top_senders(leaders: DataFrame):
     plt.grid()
     plt.tight_layout()
     plt.savefig("output/plot.png")
+
+
+def plot_correspondants(mails_df: DataFrame, top_senders_df: DataFrame):
+    mails_df.show()
+    top_senders_df.show()
+
+    return

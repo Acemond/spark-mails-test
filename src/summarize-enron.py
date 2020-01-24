@@ -20,5 +20,6 @@ sentReceivedDF = transformations.sent_received(df)
 
 mailRepo.save(sentReceivedDF)
 
-result_df = transformations.top_senders(df, sentReceivedDF)
-grapher.plot_top_senders(result_df)
+top_senders_df = transformations.top_senders(df, sentReceivedDF)
+grapher.plot_top_senders(top_senders_df)
+grapher.plot_correspondants(df, top_senders_df)

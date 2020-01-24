@@ -3,13 +3,13 @@ from pyspark.sql.functions import *
 from pyspark.sql.window import *
 
 
-def sent_received(dataframe: DataFrame) -> DataFrame:
-    exploded_df = dataframe.withColumn("recipient_array", expr("split(recipients, '\\\\|')"))\
+def sent_received(df: DataFrame) -> DataFrame:
+    exploded_df = df.withColumn("recipient_array", expr("split(recipients, '\\\\|')"))\
         .drop("recipients")\
         .selectExpr("*", "explode(recipient_array) as recipient")\
         .drop(col("recipient_array"))
 
-    sent_df = dataframe.groupBy(col("sender")).agg(count("*").alias("sent"))\
+    sent_df = df.groupBy(col("sender")).agg(count("*").alias("sent"))\
         .withColumnRenamed("sender", "person")
     received_df = exploded_df.groupBy(col("recipient")).agg(count("*").alias("received"))\
         .withColumnRenamed("recipient", "person")
