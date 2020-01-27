@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
-from docs import config
+from docs.conf import config
 
 
 class MailRepository(object):
