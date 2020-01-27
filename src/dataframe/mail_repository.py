@@ -5,6 +5,15 @@ from pyspark.sql.types import *
 
 class MailRepository(object):
     spark: SparkSession
+    explodedSchema = StructType([
+        StructField("time", LongType(), False),
+        StructField("messageIdentifier", StringType(), False),
+        StructField("sender", StringType()),
+        StructField("recipient", StringType(), False),
+        StructField("topic", StringType()),
+        StructField("mode", StringType()),
+        # StructField("called_corrupt_record", StringType()),
+    ])
 
     def __init__(self, spark: SparkSession):
         self.spark = spark

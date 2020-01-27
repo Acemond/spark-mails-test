@@ -9,9 +9,10 @@ def sent_received(mails_df: DataFrame) -> DataFrame:
     sent_df = mails_df.groupBy(col("sender")).agg(count("messageIdentifier").alias("sent"))\
         .withColumnRenamed("sender", "person")
     received_df = mails_df.groupBy(col("recipient")).agg(count("*").alias("received"))\
-        .withColumnRenamed("recipient", "person")
+        .withColumnRenamed("recipient", "person_r")
 
-    return sent_df.join(received_df, sent_df["person"] == received_df["person"], "outer").drop(received_df["person"])\
+    return sent_df.join(received_df, sent_df["person"] == received_df["person_r"], "outer").drop(col("person_r"))\
+        .where("person IS NOT NULL")\
         .na.fill(0)\
         .orderBy(desc("sent"))
 
@@ -21,7 +22,7 @@ def top_senders_list(sent_received_df: DataFrame):
     return [str(row["person"]) for row in top_senders_rows]
 
 
-def top_senders_sent_count(mails_df: DataFrame, top_senders_names: [str]) -> DataFrame:
+def top_senders_sent_count(mails_df: DataFrame, top_senders_names: [str]):
     return mails_df \
         .where(col("sender").isin(top_senders_names))\
         .selectExpr("*", "cast(cast(time / 1000 as timestamp) as date) as `date`")\
