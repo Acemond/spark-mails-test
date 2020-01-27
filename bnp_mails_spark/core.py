@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 
 from .dataframe import MailRepository, transformations
-from .docs import config
+from docs import config
 from .graph import Grapher
 
 
