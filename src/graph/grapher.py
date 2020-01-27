@@ -102,7 +102,8 @@ def plot_correlation(rows: [Row], date_list: [str]):
 
     pearson_corr, _ = pearsonr(sent, recip)
     spearman_corr, _ = spearmanr(sent, recip)
-    plt.title("Correlation: {0:.2f} (Pearson), {0:.2f} (Spearman)".format(pearson_corr, spearman_corr))
+    plt.title("Correlation over {0} senders: {1:.2f} (Pearson), {2:.2f} (Spearman)"
+              .format(len(rows), pearson_corr, spearman_corr))
     plt.xlabel("Sent")
     plt.ylabel("Distinct inbound contacts")
     plt.legend()
@@ -110,7 +111,9 @@ def plot_correlation(rows: [Row], date_list: [str]):
     plt.grid(True)
 
 
-def plot_results(plot_df, correlation_df):
+def plot_results(df, displayed_senders):
+    plot_df = df.where(col("top_sender").isin(displayed_senders))
+
     plot_rows = collect_rows(plot_df)
     date_list = create_date_list(plot_df)
 
@@ -121,7 +124,7 @@ def plot_results(plot_df, correlation_df):
     plt.subplot(2, 2, 2)
     plot_distinct_recipients(plot_rows, date_list)
 
-    correlation_rows = collect_rows(correlation_df)
+    correlation_rows = collect_rows(df)
     plt.subplot(2, 2, 3)
     plot_correlation(correlation_rows, date_list)
 

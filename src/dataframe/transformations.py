@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, Window
 from pyspark.sql.functions import *
 
 
@@ -11,7 +11,7 @@ def sent_received(mails_df: DataFrame) -> DataFrame:
     return sent_df.join(received_df, sent_df["person"] == received_df["person_r"], "outer").drop(col("person_r"))\
         .where("person IS NOT NULL")\
         .na.fill(0)\
-        .orderBy(desc("sent"))
+        .orderBy(desc("sent"))  # .withColumn("rank", row_number().over(Window().orderBy(desc("sent"))))
 
 
 def top_senders_list(sent_received_df: DataFrame, top_senders_count: int):
