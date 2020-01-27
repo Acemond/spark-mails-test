@@ -3,8 +3,7 @@ from unittest import TestCase
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, LongType
 
-from dataframe.mail_repository import MailRepository
-from dataframe.transformations import *
+from module.dataframe import *
 
 
 class Test(TestCase):
@@ -27,7 +26,7 @@ class Test(TestCase):
         self.assertEqual([row["received"] for row in result_list], [1, 0, 2])
 
     def test_sent_received_empty(self):
-        from dataframe.mail_repository import MailRepository
+        from module.dataframe.mail_repository import MailRepository
 
         input_df = self.spark.createDataFrame([], MailRepository.explodedSchema)
         result_list = sent_received(input_df).collect()
@@ -37,13 +36,13 @@ class Test(TestCase):
     def test_top_senders_list_empty(self):
         schema = StructType([StructField("person", StringType()), StructField("sent", LongType())])
         df = self.spark.createDataFrame([], schema)
-        result = top_senders_list(df)
+        result = top_senders_list(df, 3)
 
         self.assertEqual(result, [])
 
     def test_top_senders_list(self):
         df = self.spark.createDataFrame([("jean", 500), ("michel", 100), ("elsa", 80)], ["person", "sent"])
-        result = top_senders_list(df)
+        result = top_senders_list(df, 3)
 
         self.assertEqual(result, ["jean", "michel", "elsa"])
 

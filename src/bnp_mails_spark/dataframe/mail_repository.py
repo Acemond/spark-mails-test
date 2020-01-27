@@ -2,11 +2,11 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
+from bnp_mails_spark.docs import config
+
 
 class MailRepository(object):
-    OUTPUT_DIRECTORY = "output"
-    DEFAULT_INPUT_CSV = "input/enron-event-history-all.csv"
-
+    CSV_OUTPUT = config["csv_output"]
     spark: SparkSession
     explodedSchema = StructType([
         StructField("time", LongType(), False),
@@ -49,4 +49,4 @@ class MailRepository(object):
             .option("escape", "\"")\
             .option("quoteAll", "true")\
             .mode("overwrite")\
-            .csv(self.OUTPUT_DIRECTORY)
+            .csv(self.CSV_OUTPUT)
