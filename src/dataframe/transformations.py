@@ -2,9 +2,6 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
 
 
-TOP_SENDERS_COUNT = 10
-
-
 def sent_received(mails_df: DataFrame) -> DataFrame:
     sent_df = mails_df.groupBy(col("sender")).agg(count("messageIdentifier").alias("sent"))\
         .withColumnRenamed("sender", "person")
@@ -17,8 +14,8 @@ def sent_received(mails_df: DataFrame) -> DataFrame:
         .orderBy(desc("sent"))
 
 
-def top_senders_list(sent_received_df: DataFrame):
-    top_senders_rows = sent_received_df.limit(TOP_SENDERS_COUNT).collect()
+def top_senders_list(sent_received_df: DataFrame, top_senders_count: int):
+    top_senders_rows = sent_received_df.limit(top_senders_count).collect()
     return [str(row["person"]) for row in top_senders_rows]
 
 

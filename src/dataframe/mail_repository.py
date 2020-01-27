@@ -4,6 +4,9 @@ from pyspark.sql.types import *
 
 
 class MailRepository(object):
+    OUTPUT_DIRECTORY = "output"
+    DEFAULT_INPUT_CSV = "input/enron-event-history-all.csv"
+
     spark: SparkSession
     explodedSchema = StructType([
         StructField("time", LongType(), False),
@@ -46,4 +49,4 @@ class MailRepository(object):
             .option("escape", "\"")\
             .option("quoteAll", "true")\
             .mode("overwrite")\
-            .csv("output")
+            .csv(self.OUTPUT_DIRECTORY)

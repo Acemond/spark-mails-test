@@ -4,6 +4,9 @@ from pyspark.sql.functions import col, collect_list, struct, min, max, sum
 from scipy.stats import pearsonr, spearmanr
 
 
+OUTPUT_FILE = "output/plot.png"
+
+
 def create_date_list(leaders: DataFrame):
     min_year = leaders.select(min("year")).first()[0]
     min_month = leaders.where(col("year") == min_year).select(min("month")).first()[0]
@@ -122,4 +125,4 @@ def plot_results(result_df):
     plot_correlation(rows, date_list)
 
     plt.tight_layout()
-    plt.savefig("output/plot.png")
+    plt.savefig(OUTPUT_FILE)
