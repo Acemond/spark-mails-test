@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
 
 
-TOP_SENDERS_COUNT = 5
+TOP_SENDERS_COUNT = 10
 
 
 def sent_received(mails_df: DataFrame) -> DataFrame:

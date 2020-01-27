@@ -1,6 +1,7 @@
 from sys import argv
 
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
 
 from dataframe import MailRepository, transformations
 from graph import grapher
@@ -11,10 +12,14 @@ spark = SparkSession.builder \
     .getOrCreate()
 spark.conf.set("spark.sql.shuffle.partitions", "4")
 
-print("Starting application with CSV at: " + argv[1])
+print("Starting application with CSV at: {}".format(argv[1]))
 mailRepo = MailRepository(spark)
 
-df = mailRepo.load(argv[1])
+excluded = ["pete davis"]
+print("Excluding senders: {}".format(excluded))
+
+df = mailRepo.load(argv[1])\
+    .where(~col("sender").isin(*excluded))  # Exclude data
 
 sentReceivedDF = transformations.sent_received(df)
 

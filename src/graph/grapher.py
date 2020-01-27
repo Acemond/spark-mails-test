@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.functions import col, collect_list, struct, min, max, sum
+from scipy.stats import pearsonr, spearmanr
 
 
 def create_date_list(leaders: DataFrame):
@@ -64,11 +65,11 @@ def plot_distinct_recipients(rows: [Row], date_list):
         name = row["top_sender"] + " (" + str(row["total_distinct_recipients"]) + ")"
         distinct_recipients_this_month = row["distinct_recipients_this_month"]
 
-        sent_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
+        distinct_recipients_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
 
         result = []
         for index, item in enumerate(date_list):
-            result += [sent_dict.get(item) or 0]
+            result += [distinct_recipients_dict.get(item) or 0]
 
         plt.plot(date_list, result, label=name)
 
@@ -80,16 +81,45 @@ def plot_distinct_recipients(rows: [Row], date_list):
     plt.grid(True)
 
 
+def plot_correlation(rows: [Row], date_list: [str]):
+    sent = []
+    recip = []
+
+    for row in rows:
+        distinct_recipients_this_month = row["distinct_recipients_this_month"]
+        sent_this_month = row["sent_this_month"]
+
+        distinct_recipients_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
+        sent_dict = {item[0]: item[1] for item in sent_this_month}
+        for index, item in enumerate(date_list):
+            sent += [sent_dict.get(item) or 0]
+            recip += [distinct_recipients_dict.get(item) or 0]
+
+    plt.scatter(sent, recip)
+
+    pearson_corr, _ = pearsonr(sent, recip)
+    spearman_corr, _ = spearmanr(sent, recip)
+    plt.title("Correlation: {0:.2f} (Pearson), {0:.2f} (Spearman)".format(pearson_corr, spearman_corr))
+    plt.xlabel("Sent")
+    plt.ylabel("Distinct inbound contacts")
+    plt.legend()
+    plt.xticks(rotation=90)
+    plt.grid(True)
+
+
 def plot_results(result_df):
     rows = collect_rows(result_df)
     date_list = create_date_list(result_df)
 
-    plt.figure(figsize=(10, 10))
-    plt.subplot(2, 1, 1)
+    plt.figure(figsize=(16, 16))
+    plt.subplot(2, 2, 1)
     plot_sent(rows, date_list)
 
-    plt.subplot(2, 1, 2)
+    plt.subplot(2, 2, 2)
     plot_distinct_recipients(rows, date_list)
+
+    plt.subplot(2, 2, 3)
+    plot_correlation(rows, date_list)
 
     plt.tight_layout()
     plt.savefig("output/plot.png")

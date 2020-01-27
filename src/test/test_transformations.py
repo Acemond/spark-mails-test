@@ -8,7 +8,7 @@ from dataframe.transformations import *
 
 
 class Test(TestCase):
-    spark = SparkSession.builder.appName("UnitTestsSpark").getOrCreate()
+    spark = SparkSession.builder.master("local").appName("UnitTestsSpark").getOrCreate()
 
     def test_sent_received(self):
         input_data = [
