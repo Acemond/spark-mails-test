@@ -3,7 +3,8 @@ from unittest import TestCase
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, LongType
 
-from module.dataframe import *
+from bnp_mails_spark.dataframe.mail_repository import MailRepository
+from bnp_mails_spark.dataframe.transformations import *
 
 
 class Test(TestCase):
@@ -26,7 +27,6 @@ class Test(TestCase):
         self.assertEqual([row["received"] for row in result_list], [1, 0, 2])
 
     def test_sent_received_empty(self):
-        from module.dataframe.mail_repository import MailRepository
 
         input_df = self.spark.createDataFrame([], MailRepository.explodedSchema)
         result_list = sent_received(input_df).collect()
