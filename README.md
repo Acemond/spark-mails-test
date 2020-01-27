@@ -4,11 +4,9 @@ A little application to study the correlation between sent mails and distinct in
 
 ## Installation
 
-The project is built using:
-```python setup.py build```
+Install pandoc with: `pip install pypandoc`
 
-Then, with sufficient priviledges:
-```python setup.py install```
+The project can then be built using: `pip install .`
 
 The program can then be run with:
 ```python summarize-enron.py [your-input-csv-file-path]```
