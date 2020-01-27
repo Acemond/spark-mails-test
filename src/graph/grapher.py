@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from pyspark.sql import DataFrame, Row
-from pyspark.sql.functions import col, collect_list, struct, min, max, sum
+from pyspark.sql.functions import col, collect_list, struct, min, max, sum, desc
 from scipy.stats import pearsonr, spearmanr
 
 
@@ -38,7 +38,7 @@ def collect_rows(df: DataFrame):
         .groupBy("total_sent", "total_distinct_recipients", "top_sender")\
         .agg(collect_list(struct("month_year", "sent")).alias("sent_this_month"),
              collect_list(struct("month_year", "distinct_recipients")).alias("distinct_recipients_this_month"))\
-        .orderBy("top_sender")\
+        .orderBy(desc("total_sent"), "top_sender")\
         .collect()
 
 
@@ -110,19 +110,20 @@ def plot_correlation(rows: [Row], date_list: [str]):
     plt.grid(True)
 
 
-def plot_results(result_df):
-    rows = collect_rows(result_df)
-    date_list = create_date_list(result_df)
+def plot_results(plot_df, correlation_df):
+    plot_rows = collect_rows(plot_df)
+    date_list = create_date_list(plot_df)
 
     plt.figure(figsize=(16, 16))
     plt.subplot(2, 2, 1)
-    plot_sent(rows, date_list)
+    plot_sent(plot_rows, date_list)
 
     plt.subplot(2, 2, 2)
-    plot_distinct_recipients(rows, date_list)
+    plot_distinct_recipients(plot_rows, date_list)
 
+    correlation_rows = collect_rows(correlation_df)
     plt.subplot(2, 2, 3)
-    plot_correlation(rows, date_list)
+    plot_correlation(correlation_rows, date_list)
 
     plt.tight_layout()
     plt.savefig(OUTPUT_FILE)

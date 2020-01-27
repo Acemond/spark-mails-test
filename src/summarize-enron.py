@@ -8,7 +8,8 @@ from graph import grapher
 
 
 EXCLUDED_SENDERS = ["pete davis"]
-TOP_SENDERS_COUNT = 10
+DISPLAYED_TOP_SENDERS_COUNT = 6
+TOP_SENDERS_COUNT = 50
 
 
 spark = SparkSession.builder \
@@ -38,4 +39,5 @@ distinct_received_df = transformations.top_senders_distinct_recipients_count(df,
 result_df = sent_df.join(distinct_received_df, ["top_sender", "month_year", "month", "year"], "left")\
     .na.fill(0)
 
-grapher.plot_results(result_df)
+plot_df = result_df.where(col("top_sender").isin(top_senders_names[:DISPLAYED_TOP_SENDERS_COUNT]))
+grapher.plot_results(plot_df, correlation_df=result_df)
