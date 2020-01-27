@@ -7,5 +7,5 @@ setup(
    author='Adrien Brunelat',
    author_email='adrien.brunelat@novencia.com',
    packages=['bnp_mails_spark'],
-   install_requires=['pyspark', 'scipy', 'matplotlib', ''],
+   install_requires=['pyspark', 'scipy', 'matplotlib'],
 )
