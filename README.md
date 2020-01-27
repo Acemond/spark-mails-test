@@ -19,7 +19,7 @@ If you don't have the JRE 8, you can install it with (depending on the OS):
  
 If the JDK 8 is not your JAVA_HOME's JDK, prepend the main command with: `JAVA_HOME=/path/to/jre8`
 
-The project can then be built using (may need priviledges): `pip install .`
+The project can then be built using (may need priviledges): `pip install .` (or prefixed for python 3.7: `python3.7 -m pip install .`
 
 The program can then be run with:
 ```python summarize-enron.py [your-input-csv-file-path]```
