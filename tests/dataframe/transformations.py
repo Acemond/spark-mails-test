@@ -3,8 +3,8 @@ from unittest import TestCase
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, LongType
 
-from bnp_mails_spark.dataframe.mail_repository import MailRepository
-from bnp_mails_spark.dataframe.transformations import *
+from dataframe.mail_repository import MailRepository
+from dataframe.transformations import *
 
 
 class Test(TestCase):

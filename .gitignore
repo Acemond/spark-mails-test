@@ -3,8 +3,8 @@
 *.iml
 .idea
 
-src/output
-src/input
+output
+input
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
