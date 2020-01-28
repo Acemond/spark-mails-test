@@ -15,6 +15,7 @@ class Application(object):
     GRAPH_OUTPUT_FILE = config["graph_output_file"]
 
     mail_repository: MailRepository
+    grapher: Grapher
 
     def __init__(self):
         spark = SparkSession.builder \
@@ -23,6 +24,7 @@ class Application(object):
             .getOrCreate()
         spark.conf.set("spark.sql.shuffle.partitions", "4")
         self.mail_repository = MailRepository(spark)
+        self.grapher = Grapher()
 
     def write_vips(self, mails_df: DataFrame):
         sent_received_df = transformations.sent_received(mails_df)
@@ -48,4 +50,4 @@ class Application(object):
 
         displayed_df = result_df.join(broadcast(vips_df.limit(self.DISPLAYED_vip_COUNT)),
                                       result_df["vip"] == vips_df["person"]).drop("person")
-        Grapher().plot_results(result_df, displayed_df, self.GRAPH_OUTPUT_FILE)
+        self.grapher.plot_results(result_df, displayed_df, self.GRAPH_OUTPUT_FILE)
