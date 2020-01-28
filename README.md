@@ -21,6 +21,8 @@ If the JDK 8 is not your JAVA_HOME's JDK, prepend the main command with: `JAVA_H
 
 The project can then be built using (may need priviledges): `pip install .` (or prefixed for python 3.7: `python3.7 -m pip install .`
 
+## Running
+
 The program can then be run with:
 ```python summarize-enron.py [your-input-csv-file-path]```
 
