@@ -96,7 +96,7 @@ class Grapher(object):
 
         pearson_corr, _ = pearsonr(sent, recip)
         spearman_corr, _ = spearmanr(sent, recip)
-        plt.title("Correlation over {0} senders: {1:.2f} (Pearson), {2:.2f} (Spearman)"
+        plt.title("Correlation over top {0} senders: {1:.2f} (Pearson), {2:.2f} (Spearman)"
                   .format(len(rows), pearson_corr, spearman_corr))
         plt.xlabel("Sent")
         plt.ylabel("Distinct inbound contacts")
@@ -108,7 +108,7 @@ class Grapher(object):
         plot_rows = self.__collect_rows(plot_df)
         date_list = self.__create_date_list(plot_df)
 
-        plt.figure(figsize=(16, 16))
+        plt.figure(figsize=(18, 18))
         plt.subplot(2, 2, 1)
         self.__plot_sent(plot_rows, date_list)
 
@@ -117,6 +117,9 @@ class Grapher(object):
 
         correlation_rows = self.__collect_rows(df)
         plt.subplot(2, 2, 3)
+        self.__plot_correlation(plot_rows, date_list)
+
+        plt.subplot(2, 2, 4)
         self.__plot_correlation(correlation_rows, date_list)
 
         plt.tight_layout()
