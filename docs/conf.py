@@ -1,5 +1,5 @@
 config = {
-    "excluded_senders": ["pete davis", "schedule", "blank", "notes"],
+    "excluded_senders": ["pete davis", "schedule", "blank", "notes", "outlook"],
     "displayed_vips_count": 6,
     "vips_count": 100,
     "default_csv_input": "input/enron-event-history-all.csv",
