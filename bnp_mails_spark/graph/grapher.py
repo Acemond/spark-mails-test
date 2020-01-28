@@ -5,7 +5,7 @@ from scipy.stats import pearsonr, spearmanr
 
 
 class Grapher(object):
-    def __create_date_list(self, leaders: DataFrame):
+    def __create_date_list(self, leaders: DataFrame) -> [str]:
         min_year = leaders.select(min("year")).first()[0]
         min_month = leaders.where(col("year") == min_year).select(min("month")).first()[0]
         max_year = leaders.select(max("year")).first()[0]
@@ -25,7 +25,7 @@ class Grapher(object):
 
         return [str(date[0]).rjust(2, "0") + "/" + str(date[1]) for date in dates]
 
-    def __collect_rows(self, df: DataFrame):
+    def __collect_rows(self, df: DataFrame) -> [Row]:
         df.cache()
 
         total_df = df.groupBy("vip")\
@@ -38,7 +38,7 @@ class Grapher(object):
             .orderBy(desc("total_sent"), "vip")\
             .collect()
 
-    def __plot_sent(self, rows: [Row], date_list):
+    def __plot_sent(self, rows: [Row], date_list: [str]):
         for row in rows:
             name = row["vip"] + " (" + str(row["total_sent"]) + ")"
             sent_this_month = row["sent_this_month"]
@@ -58,7 +58,7 @@ class Grapher(object):
         plt.xticks(rotation=90)
         plt.grid(True)
 
-    def __plot_distinct_recipients(self, rows: [Row], date_list):
+    def __plot_distinct_recipients(self, rows: [Row], date_list: [str]):
         for row in rows:
             name = row["vip"] + " (" + str(row["total_distinct_recipients"]) + ")"
             distinct_recipients_this_month = row["distinct_recipients_this_month"]
@@ -104,7 +104,7 @@ class Grapher(object):
         plt.xticks(rotation=90)
         plt.grid(True)
 
-    def plot_results(self, df, plot_df, output_file):
+    def plot_results(self, df: DataFrame, plot_df: DataFrame, output_file: str):
         plot_rows = self.__collect_rows(plot_df)
         date_list = self.__create_date_list(plot_df)
 

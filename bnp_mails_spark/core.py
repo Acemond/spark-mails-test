@@ -26,18 +26,18 @@ class Application(object):
         self.mail_repository = MailRepository(spark)
         self.grapher = Grapher()
 
-    def write_vips(self, mails_df: DataFrame):
+    def write_vips(self, mails_df: DataFrame) -> DataFrame:
         sent_received_df = transformations.sent_received(mails_df)
         self.mail_repository.save(sent_received_df, self.CSV_OUTPUT)
         return sent_received_df
 
-    def transform_data(self, mails_df: DataFrame, vips_df: DataFrame):
+    def transform_data(self, mails_df: DataFrame, vips_df: DataFrame) -> DataFrame:
         sent_df = transformations.vips_sent_count(mails_df, vips_df)
         distinct_received_df = transformations.vips_distinct_recipients_count(mails_df, vips_df)
         return sent_df.join(distinct_received_df, ["vip", "month_year", "month", "year"], "left")\
             .na.fill(0)
 
-    def main(self, user_input_csv):
+    def main(self, user_input_csv: str):
         input_csv_file = user_input_csv or self.DEFAULT_CSV_INPUT
         print("Starting application with CSV at: {}".format(input_csv_file))
         print("Excluding senders: {}".format(self.EXCLUDED_SENDERS))

@@ -9,7 +9,7 @@ class MailRepository(object):
     def __init__(self, spark: SparkSession):
         self.spark = spark
 
-    def load(self, input_path: str):
+    def load(self, input_path: str) -> DataFrame:
         schema = StructType([
             StructField("time", LongType(), False),
             StructField("messageIdentifier", StringType(), False),

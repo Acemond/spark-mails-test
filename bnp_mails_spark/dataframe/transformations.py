@@ -14,7 +14,7 @@ def sent_received(mails_df: DataFrame) -> DataFrame:
         .orderBy(desc("sent"))
 
 
-def vips_sent_count(mails_df: DataFrame, vips_df: DataFrame):
+def vips_sent_count(mails_df: DataFrame, vips_df: DataFrame) -> DataFrame:
     return mails_df \
         .join(vips_df, mails_df["sender"] == vips_df["person"]).drop("person")\
         .selectExpr("*", "cast(cast(time / 1000 as timestamp) as date) as `date`")\
@@ -25,7 +25,7 @@ def vips_sent_count(mails_df: DataFrame, vips_df: DataFrame):
         .withColumnRenamed("sender", "vip")
 
 
-def vips_distinct_recipients_count(mails_df: DataFrame, vips_df: DataFrame):
+def vips_distinct_recipients_count(mails_df: DataFrame, vips_df: DataFrame) -> DataFrame:
     return mails_df\
         .join(vips_df, mails_df["recipient"] == vips_df["person"]).drop("person")\
         .selectExpr("*", "cast(cast(time / 1000 as timestamp) as date) as `date`") \
