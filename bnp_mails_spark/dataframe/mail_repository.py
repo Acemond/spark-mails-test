@@ -2,21 +2,9 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
-from docs.conf import config
-
 
 class MailRepository(object):
-    CSV_OUTPUT = config["csv_output"]
     spark: SparkSession
-    explodedSchema = StructType([
-        StructField("time", LongType(), False),
-        StructField("messageIdentifier", StringType(), False),
-        StructField("sender", StringType()),
-        StructField("recipient", StringType(), False),
-        StructField("topic", StringType()),
-        StructField("mode", StringType()),
-        # StructField("called_corrupt_record", StringType()),
-    ])
 
     def __init__(self, spark: SparkSession):
         self.spark = spark
@@ -39,14 +27,13 @@ class MailRepository(object):
 
         return mails_df \
             .withColumn("recipient_array", expr("split(recipients, '\\\\|')")) \
-            .drop("recipients") \
             .selectExpr("*", "explode(recipient_array) as recipient") \
-            .drop(col("recipient_array"))\
+            .drop("recipients", "recipient_array", "topic")\
             .cache()
 
-    def save(self, resulting_df: DataFrame):
+    def save(self, resulting_df: DataFrame, output_path: str):
         resulting_df.coalesce(1).write\
             .option("escape", "\"")\
             .option("quoteAll", "true")\
             .mode("overwrite")\
-            .csv(self.CSV_OUTPUT)
+            .csv(output_path)

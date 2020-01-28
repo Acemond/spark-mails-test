@@ -28,19 +28,19 @@ class Grapher(object):
     def __collect_rows(self, df: DataFrame):
         df.cache()
 
-        total_df = df.groupBy("top_sender")\
+        total_df = df.groupBy("vip")\
             .agg(sum("sent").alias("total_sent"), sum("distinct_recipients").alias("total_distinct_recipients"))
 
-        return df.join(total_df, "top_sender") \
-            .groupBy("total_sent", "total_distinct_recipients", "top_sender")\
+        return df.join(total_df, "vip") \
+            .groupBy("total_sent", "total_distinct_recipients", "vip")\
             .agg(collect_list(struct("month_year", "sent")).alias("sent_this_month"),
                  collect_list(struct("month_year", "distinct_recipients")).alias("distinct_recipients_this_month"))\
-            .orderBy(desc("total_sent"), "top_sender")\
+            .orderBy(desc("total_sent"), "vip")\
             .collect()
 
     def __plot_sent(self, rows: [Row], date_list):
         for row in rows:
-            name = row["top_sender"] + " (" + str(row["total_sent"]) + ")"
+            name = row["vip"] + " (" + str(row["total_sent"]) + ")"
             sent_this_month = row["sent_this_month"]
 
             sent_dict = {item[0]: item[1] for item in sent_this_month}
@@ -60,7 +60,7 @@ class Grapher(object):
 
     def __plot_distinct_recipients(self, rows: [Row], date_list):
         for row in rows:
-            name = row["top_sender"] + " (" + str(row["total_distinct_recipients"]) + ")"
+            name = row["vip"] + " (" + str(row["total_distinct_recipients"]) + ")"
             distinct_recipients_this_month = row["distinct_recipients_this_month"]
 
             distinct_recipients_dict = {item[0]: item[1] for item in distinct_recipients_this_month}
@@ -104,9 +104,7 @@ class Grapher(object):
         plt.xticks(rotation=90)
         plt.grid(True)
 
-    def plot_results(self, df, displayed_senders, output_file):
-        plot_df = df.where(col("top_sender").isin(displayed_senders))
-
+    def plot_results(self, df, plot_df, output_file):
         plot_rows = self.__collect_rows(plot_df)
         date_list = self.__create_date_list(plot_df)
 

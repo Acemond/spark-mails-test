@@ -1,12 +1,19 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.functions import col, broadcast
 
-from .dataframe import MailRepository, transformations
 from docs.conf import config
+from .dataframe import MailRepository, transformations
 from .graph import Grapher
 
 
 class Application(object):
+    vipS_COUNT = config["vips_count"]
+    DISPLAYED_vip_COUNT = config["displayed_vips_count"]
+    EXCLUDED_SENDERS = config["excluded_senders"]
+    DEFAULT_CSV_INPUT = config["default_csv_input"]
+    CSV_OUTPUT = config["csv_output"]
+    GRAPH_OUTPUT_FILE = config["graph_output_file"]
+
     mail_repository: MailRepository
 
     def __init__(self):
@@ -17,29 +24,28 @@ class Application(object):
         spark.conf.set("spark.sql.shuffle.partitions", "4")
         self.mail_repository = MailRepository(spark)
 
-    def write_top_senders(self, mails_df):
+    def write_vips(self, mails_df: DataFrame):
         sent_received_df = transformations.sent_received(mails_df)
-        self.mail_repository.save(sent_received_df)
+        self.mail_repository.save(sent_received_df, self.CSV_OUTPUT)
         return sent_received_df
 
-    def transform_data(self, mails_df, top_senders):
-        sent_df = transformations.top_senders_sent_count(mails_df, top_senders)
-        distinct_received_df = transformations.top_senders_distinct_recipients_count(mails_df, top_senders)
-
-        return sent_df.join(distinct_received_df, ["top_sender", "month_year", "month", "year"], "left")\
+    def transform_data(self, mails_df: DataFrame, vips_df: DataFrame):
+        sent_df = transformations.vips_sent_count(mails_df, vips_df)
+        distinct_received_df = transformations.vips_distinct_recipients_count(mails_df, vips_df)
+        return sent_df.join(distinct_received_df, ["vip", "month_year", "month", "year"], "left")\
             .na.fill(0)
 
     def main(self, user_input_csv):
-        input_csv_file = user_input_csv or config["default_csv_input"]
+        input_csv_file = user_input_csv or self.DEFAULT_CSV_INPUT
         print("Starting application with CSV at: {}".format(input_csv_file))
-        print("Excluding senders: {}".format(config["excluded_senders"]))
+        print("Excluding senders: {}".format(self.EXCLUDED_SENDERS))
 
         mails_df = self.mail_repository.load(input_csv_file)\
-            .where(~col("sender").isin(config["excluded_senders"]))  # Exclude data
+            .where(~col("sender").isin(self.EXCLUDED_SENDERS))  # Exclude data
 
-        top_senders_df = self.write_top_senders(mails_df)
-        top_senders = transformations.top_senders_list(top_senders_df, config["top_senders_count"])
-        result_df = self.transform_data(mails_df, top_senders)
+        vips_df = broadcast(self.write_vips(mails_df).select("person").limit(self.vipS_COUNT))
+        result_df = self.transform_data(mails_df, vips_df)
 
-        displayed_df = top_senders[:config["displayed_top_senders_count"]]
-        Grapher().plot_results(result_df, displayed_df, config["graph_output_file"])
+        displayed_df = result_df.join(broadcast(vips_df.limit(self.DISPLAYED_vip_COUNT)),
+                                      result_df["vip"] == vips_df["person"]).drop("person")
+        Grapher().plot_results(result_df, displayed_df, self.GRAPH_OUTPUT_FILE)

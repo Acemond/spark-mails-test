@@ -11,30 +11,26 @@ def sent_received(mails_df: DataFrame) -> DataFrame:
     return sent_df.join(received_df, sent_df["person"] == received_df["person_r"], "outer").drop(col("person_r"))\
         .where("person IS NOT NULL")\
         .na.fill(0)\
-        .orderBy(desc("sent"))  # .withColumn("rank", row_number().over(Window().orderBy(desc("sent"))))
+        .orderBy(desc("sent"))
 
 
-def top_senders_list(sent_received_df: DataFrame, top_senders_count: int):
-    top_senders_rows = sent_received_df.limit(top_senders_count).collect()
-    return [str(row["person"]) for row in top_senders_rows]
-
-
-def top_senders_sent_count(mails_df: DataFrame, top_senders_names: [str]):
+def vips_sent_count(mails_df: DataFrame, vips_df: DataFrame):
     return mails_df \
-        .where(col("sender").isin(top_senders_names))\
+        .join(vips_df, mails_df["sender"] == vips_df["person"]).drop("person")\
         .selectExpr("*", "cast(cast(time / 1000 as timestamp) as date) as `date`")\
         .withColumn("month", expr("cast(date_format(date, 'M') as int)"))\
         .withColumn("year", expr("cast(date_format(date, 'yyyy') as int)"))\
         .withColumn("month_year", expr("date_format(date, 'MM/yyyy')"))\
         .groupBy("sender", "month", "year", "month_year").agg(count("messageIdentifier").alias("sent"))\
-        .withColumnRenamed("sender", "top_sender")
+        .withColumnRenamed("sender", "vip")
 
 
-def top_senders_distinct_recipients_count(mails_df: DataFrame, top_senders_names: [str]):
-    return mails_df.where(col("recipient").isin(top_senders_names))\
+def vips_distinct_recipients_count(mails_df: DataFrame, vips_df: DataFrame):
+    return mails_df\
+        .join(vips_df, mails_df["recipient"] == vips_df["person"]).drop("person")\
         .selectExpr("*", "cast(cast(time / 1000 as timestamp) as date) as `date`") \
         .withColumn("month", expr("cast(date_format(date, 'M') as int)")) \
         .withColumn("year", expr("cast(date_format(date, 'yyyy') as int)")) \
         .withColumn("month_year", expr("date_format(date, 'MM/yyyy')")) \
         .groupBy("recipient", "month", "year", "month_year").agg(countDistinct("sender").alias("distinct_recipients"))\
-        .withColumnRenamed("recipient", "top_sender")
+        .withColumnRenamed("recipient", "vip")
