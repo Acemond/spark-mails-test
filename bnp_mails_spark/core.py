@@ -7,7 +7,7 @@ from .graph import Grapher
 
 
 class Application(object):
-    vipS_COUNT = config["vips_count"]
+    VIPS_COUNT = config["vips_count"]
     DISPLAYED_vip_COUNT = config["displayed_vips_count"]
     EXCLUDED_SENDERS = config["excluded_senders"]
     DEFAULT_CSV_INPUT = config["default_csv_input"]
@@ -45,7 +45,7 @@ class Application(object):
         mails_df = self.mail_repository.load(input_csv_file)\
             .where(~col("sender").isin(self.EXCLUDED_SENDERS))  # Exclude data
 
-        vips_df = broadcast(self.write_vips(mails_df).select("person").limit(self.vipS_COUNT))
+        vips_df = broadcast(self.write_vips(mails_df).select("person").limit(self.VIPS_COUNT))
         result_df = self.transform_data(mails_df, vips_df)
 
         displayed_df = result_df.join(broadcast(vips_df.limit(self.DISPLAYED_vip_COUNT)),
