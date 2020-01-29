@@ -14,9 +14,8 @@ def sent_received(mails_df: DataFrame) -> DataFrame:
         .orderBy(desc("sent"))
 
 
-def vips_sent_count(mails_df: DataFrame, vips_df: DataFrame) -> DataFrame:
-    return mails_df \
-        .join(vips_df, mails_df["sender"] == vips_df["person"]).drop("person")\
+def vips_sent_count(mails_df: DataFrame, vips: [str]) -> DataFrame:
+    return mails_df.where(col("sender").isin(vips)) \
         .selectExpr("*", "cast(cast(time / 1000 as timestamp) as date) as `date`")\
         .withColumn("month", expr("cast(date_format(date, 'M') as int)"))\
         .withColumn("year", expr("cast(date_format(date, 'yyyy') as int)"))\
@@ -25,9 +24,8 @@ def vips_sent_count(mails_df: DataFrame, vips_df: DataFrame) -> DataFrame:
         .withColumnRenamed("sender", "vip")
 
 
-def vips_distinct_recipients_count(mails_df: DataFrame, vips_df: DataFrame) -> DataFrame:
-    return mails_df\
-        .join(vips_df, mails_df["recipient"] == vips_df["person"]).drop("person")\
+def vips_distinct_recipients_count(mails_df: DataFrame, vips: [str]) -> DataFrame:
+    return mails_df.where(col("recipient").isin(vips)) \
         .selectExpr("*", "cast(cast(time / 1000 as timestamp) as date) as `date`") \
         .withColumn("month", expr("cast(date_format(date, 'M') as int)")) \
         .withColumn("year", expr("cast(date_format(date, 'yyyy') as int)")) \

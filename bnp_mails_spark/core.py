@@ -31,9 +31,9 @@ class Application(object):
         self.mail_repository.save(sent_received_df, self.CSV_OUTPUT)
         return sent_received_df
 
-    def transform_data(self, mails_df: DataFrame, vips_df: DataFrame) -> DataFrame:
-        sent_df = transformations.vips_sent_count(mails_df, vips_df)
-        distinct_received_df = transformations.vips_distinct_recipients_count(mails_df, vips_df)
+    def transform_data(self, mails_df: DataFrame, vips: [str]) -> DataFrame:
+        sent_df = transformations.vips_sent_count(mails_df, vips)
+        distinct_received_df = transformations.vips_distinct_recipients_count(mails_df, vips)
         return sent_df.join(distinct_received_df, ["vip", "month_year", "month", "year"], "left")\
             .na.fill(0)
 
@@ -45,9 +45,8 @@ class Application(object):
         mails_df = self.mail_repository.load(input_csv_file)\
             .where(~col("sender").isin(self.EXCLUDED_SENDERS))  # Exclude data
 
-        vips_df = broadcast(self.write_vips(mails_df).select("person").limit(self.VIPS_COUNT))
-        result_df = self.transform_data(mails_df, vips_df)
+        vips = [row["person"] for row in self.write_vips(mails_df).select("person").take(self.VIPS_COUNT)]
+        result_df = self.transform_data(mails_df, vips)
 
-        displayed_df = result_df.join(broadcast(vips_df.limit(self.DISPLAYED_vip_COUNT)),
-                                      result_df["vip"] == vips_df["person"]).drop("person")
+        displayed_df = result_df.where(col("vip").isin(vips[:self.DISPLAYED_vip_COUNT]))
         self.grapher.plot_results(result_df, displayed_df, self.GRAPH_OUTPUT_FILE)
