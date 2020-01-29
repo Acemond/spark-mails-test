@@ -100,8 +100,6 @@ class Grapher(object):
                   .format(len(rows), pearson_corr, spearman_corr))
         plt.xlabel("Sent")
         plt.ylabel("Distinct inbound contacts")
-        plt.legend()
-        plt.xticks(rotation=90)
         plt.grid(True)
 
     def plot_results(self, df: DataFrame, plot_df: DataFrame, output_file: str):
