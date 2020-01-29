@@ -32,3 +32,6 @@ If you need to prepend JAVA_HOME and python version:
 By default, you will find the output in the output folder:
  - CSV file(s): `output/csv`
  - graph: `output/plot.png`
+
+An output sample:
+![Output graph](assets/sample.png)
