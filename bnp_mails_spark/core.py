@@ -46,7 +46,7 @@ class Application(object):
             .where(~col("sender").isin(self.EXCLUDED_SENDERS))  # Exclude data
 
         vips = [row["person"] for row in self.write_vips(mails_df).select("person").take(self.VIPS_COUNT)]
-        result_df = self.transform_data(mails_df, vips).cache()
+        result_df = self.transform_data(mails_df, vips)
 
-        displayed_df = result_df.where(col("vip").isin(vips[:self.DISPLAYED_vip_COUNT])).cache()
+        displayed_df = result_df.where(col("vip").isin(vips[:self.DISPLAYED_vip_COUNT]))
         self.grapher.plot_results(result_df, displayed_df, self.GRAPH_OUTPUT_FILE)
