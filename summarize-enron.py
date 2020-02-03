@@ -3,5 +3,5 @@ from sys import argv
 
 Application().main(argv[1])
 
-print("Press Enter to stop SparkUI...")
-input()
+# print("Press Enter to stop SparkUI...")
+# input()
