@@ -19,7 +19,7 @@ class Application(object):
 
     def __init__(self):
         spark = SparkSession.builder \
-            .master("local") \
+            .master("local[*]") \
             .appName("BnpExam") \
             .getOrCreate()
         spark.conf.set("spark.sql.shuffle.partitions", "4")

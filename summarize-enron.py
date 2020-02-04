@@ -3,5 +3,6 @@ from sys import argv
 
 Application().main(argv[1])
 
+# Debug: used to keep SparkUI alive
 # print("Press Enter to stop SparkUI...")
 # input()
